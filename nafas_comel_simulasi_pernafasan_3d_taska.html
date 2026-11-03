@@ -1,0 +1,1064 @@
+<!DOCTYPE html>
+<html lang="ms" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nafas Comel 3D | Terokai Pernafasan Untuk Kanak-Kanak TASKA</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        kid: {
+                            pink: '#ff85a2',
+                            yellow: '#fde047',
+                            blue: '#38bdf8',
+                            green: '#4ade80',
+                            purple: '#c084fc',
+                            orange: '#fb923c',
+                            card: '#ffffff'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Comic Sans MS', 'Chalkboard SE', 'Fredoka', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Three.js & OrbitControls -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+    <style>
+        /* Custom Kids Styling */
+        body {
+            background: linear-gradient(135deg, #e0f2fe 0%, #fce7f3 50%, #fef9c3 100%);
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        .kid-btn {
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.15);
+        }
+        .kid-btn:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 9px 0 rgba(0,0,0,0.15);
+        }
+        .kid-btn:active {
+            transform: translateY(3px) scale(0.97);
+            box-shadow: 0 2px 0 rgba(0,0,0,0.15);
+        }
+
+        .kid-card {
+            background: rgba(255, 255, 255, 0.88);
+            backdrop-filter: blur(12px);
+            border: 4px solid #ffffff;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+            border-radius: 2rem;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-8px) rotate(2deg); }
+        }
+        .animate-float {
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes pulse-heart {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+        }
+        .animate-breath-text {
+            animation: pulse-heart 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden font-sans text-slate-800 flex flex-col">
+
+    <!-- 3D Canvas Viewport -->
+    <div id="canvas-container" class="absolute inset-0 w-full h-full z-0 cursor-grab active:cursor-grabbing"></div>
+
+    <!-- HEADER BAR TASKA -->
+    <header class="relative z-10 p-3 sm:p-4 flex justify-between items-center pointer-events-none">
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3 bg-white/90 px-4 py-2.5 rounded-full border-4 border-kid-pink shadow-lg pointer-events-auto animate-float">
+            <span class="text-3xl">🫁</span>
+            <div>
+                <h1 class="text-base sm:text-xl font-extrabold text-pink-600 tracking-wide">
+                    NAFAS COMEL 3D
+                </h1>
+                <p class="text-[11px] font-bold text-sky-500">Jom Terokai Pernafasan Kawan-Kawan!</p>
+            </div>
+        </div>
+
+        <!-- Right Quick Status / Audio -->
+        <div class="flex items-center gap-2 sm:gap-3 pointer-events-auto">
+            <!-- Audio Toggle Button -->
+            <button onclick="toggleAudio()" id="btn-audio" class="kid-btn bg-kid-yellow text-amber-800 font-bold px-4 py-2.5 rounded-full flex items-center gap-2 border-2 border-white text-xs sm:text-sm">
+                <i id="audio-icon" class="fa-solid fa-volume-high text-lg"></i>
+                <span class="hidden sm:inline">BUNYI</span>
+            </button>
+            
+            <!-- Air Quality Toggle -->
+            <button onclick="toggleAirQuality()" id="btn-air-quality" class="kid-btn bg-emerald-400 text-white font-bold px-4 py-2.5 rounded-full flex items-center gap-2 border-2 border-white text-xs sm:text-sm">
+                <i id="air-icon" class="fa-solid fa-wind text-lg"></i>
+                <span id="air-label">UDARA BERSIH</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- LEFT SIDEBAR: PENGAMBILAN KAWAN HAIWAN (ORGAN SELECTOR) -->
+    <nav class="absolute top-20 left-3 sm:left-6 z-10 flex flex-col gap-3 w-16 sm:w-56 pointer-events-auto">
+        <div class="bg-white/90 p-2 sm:p-3 rounded-3xl border-4 border-sky-300 shadow-xl flex flex-col gap-2">
+            <span class="text-[11px] font-extrabold text-sky-600 text-center uppercase tracking-wider hidden sm:block">
+                PILIH KAWAN 3D 🐾
+            </span>
+
+            <!-- Human / Lungs -->
+            <button onclick="switchOrgan('human')" id="btn-organ-human" class="organ-btn kid-btn bg-kid-pink text-white p-2.5 sm:px-3 sm:py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-3 w-full border-2 border-white">
+                <span class="text-2xl">👧</span>
+                <div class="text-left hidden sm:block">
+                    <div class="leading-tight">Manusia</div>
+                    <div class="text-[9px] opacity-90 font-normal">Paru-paru Comel</div>
+                </div>
+            </button>
+
+            <!-- Fish / Gills -->
+            <button onclick="switchOrgan('fish')" id="btn-organ-fish" class="organ-btn kid-btn bg-slate-100 text-slate-700 hover:bg-sky-100 p-2.5 sm:px-3 sm:py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-3 w-full border-2 border-white">
+                <span class="text-2xl">🐠</span>
+                <div class="text-left hidden sm:block">
+                    <div class="leading-tight">Ikan Comel</div>
+                    <div class="text-[9px] text-slate-500 font-normal">Insang Air</div>
+                </div>
+            </button>
+
+            <!-- Grasshopper / Spiracles -->
+            <button onclick="switchOrgan('grasshopper')" id="btn-organ-grasshopper" class="organ-btn kid-btn bg-slate-100 text-slate-700 hover:bg-green-100 p-2.5 sm:px-3 sm:py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-3 w-full border-2 border-white">
+                <span class="text-2xl">🦗</span>
+                <div class="text-left hidden sm:block">
+                    <div class="leading-tight">Belalang</div>
+                    <div class="text-[9px] text-slate-500 font-normal">Spirakel Liang</div>
+                </div>
+            </button>
+
+            <!-- Worm / Moist Skin -->
+            <button onclick="switchOrgan('worm')" id="btn-organ-worm" class="organ-btn kid-btn bg-slate-100 text-slate-700 hover:bg-purple-100 p-2.5 sm:px-3 sm:py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-3 w-full border-2 border-white">
+                <span class="text-2xl">🪱</span>
+                <div class="text-left hidden sm:block">
+                    <div class="leading-tight">Cacing Lincah</div>
+                    <div class="text-[9px] text-slate-500 font-normal">Kulit Lembap</div>
+                </div>
+            </button>
+        </div>
+
+        <!-- Zoom to Alveolus Mode -->
+        <button onclick="toggleMicroMode()" id="btn-micro" class="kid-btn bg-kid-purple text-white p-3 rounded-2xl font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 border-4 border-white shadow-lg">
+            <span class="text-xl">🔬</span>
+            <span class="hidden sm:inline">ZOOM ALVEOLUS</span>
+        </button>
+    </nav>
+
+    <!-- RIGHT FLOATING PANEL: AKTIVITI & INFO KAWAN -->
+    <aside class="absolute top-20 right-3 sm:right-6 bottom-28 z-10 w-72 sm:w-80 pointer-events-auto flex flex-col gap-3">
+        <!-- Info Card -->
+        <div class="kid-card p-4 sm:p-5 flex-1 flex flex-col justify-between overflow-y-auto">
+            <div>
+                <!-- Title Badge -->
+                <div class="flex items-center justify-between border-b-2 border-pink-100 pb-3 mb-3">
+                    <div class="flex items-center gap-2">
+                        <span id="card-emoji" class="text-3xl">🫁</span>
+                        <div>
+                            <h2 id="card-title" class="text-lg font-extrabold text-pink-600">Paru-paru Manusia</h2>
+                            <p id="card-subtitle" class="text-xs font-bold text-sky-500">Menyedut Oksigen Segar!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Live Status Box -->
+                <div class="bg-sky-50 p-3 rounded-2xl border-2 border-sky-200 mb-3 text-center">
+                    <span class="text-xs font-bold text-sky-600 block mb-1">STATUS PERNAFASAN</span>
+                    <div id="breath-status-text" class="text-base font-extrabold text-pink-500 animate-breath-text">
+                        💨 TARIK NAFAS... (UDARA MASUK)
+                    </div>
+                </div>
+
+                <!-- Friendly Description -->
+                <p id="card-desc" class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed mb-4">
+                    Paru-paru berfungsi seperti belon comel! Apabila kita tarik nafas, paru-paru mengembang dan diisi dengan udara segar.
+                </p>
+
+                <!-- Key Interactive Facts -->
+                <div class="space-y-2 text-xs font-bold">
+                    <div class="bg-pink-50 p-2.5 rounded-xl border border-pink-200 text-pink-700 flex items-center gap-2">
+                        <span>🔵</span>
+                        <span id="fact-1">Zarah Biru = Oksigen ($O_2$) Masuk</span>
+                    </div>
+                    <div class="bg-amber-50 p-2.5 rounded-xl border border-amber-200 text-amber-700 flex items-center gap-2">
+                        <span>🔴</span>
+                        <span id="fact-2">Zarah Merah = Karbon Dioksida ($CO_2$) Keluar</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Activity Launch Buttons -->
+            <div class="pt-3 border-t-2 border-slate-100 space-y-2 mt-3">
+                <button onclick="openMissionModal()" class="kid-btn bg-kid-yellow text-amber-900 w-full py-2.5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 border-2 border-white">
+                    <span>🧩</span> MISI LALUAN UDARA
+                </button>
+                <button onclick="openQuizModal()" class="kid-btn bg-kid-green text-white w-full py-2.5 rounded-2xl font-extrabold text-xs flex items-center justify-center gap-2 border-2 border-white">
+                    <span>🌟</span> KUIZ COMEL
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- BOTTOM CONTROL BAR: PERGERAKAN & KADAR NAFAS -->
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 pointer-events-auto flex items-center gap-2 sm:gap-4 bg-white/95 p-3 rounded-full border-4 border-kid-pink shadow-2xl max-w-[95vw] overflow-x-auto">
+        <!-- Play / Pause Breathing -->
+        <button onclick="toggleBreathing()" id="btn-playpause" class="kid-btn bg-kid-pink text-white w-12 h-12 rounded-full flex items-center justify-center text-xl font-extrabold border-2 border-white">
+            <i id="icon-playpause" class="fa-solid fa-pause"></i>
+        </button>
+
+        <div class="h-8 w-1 bg-pink-100 rounded-full"></div>
+
+        <!-- Breathing Speed Modes -->
+        <div class="flex items-center gap-1 sm:gap-2">
+            <span class="text-xs font-extrabold text-slate-500 hidden sm:inline ml-1">KADAR:</span>
+            <button onclick="setSpeed('slow')" id="speed-slow" class="speed-btn kid-btn bg-sky-100 text-sky-700 px-3.5 py-2 rounded-full font-extrabold text-xs flex items-center gap-1.5 border border-sky-300">
+                <span>🐢</span> SANTAI
+            </button>
+            <button onclick="setSpeed('normal')" id="speed-normal" class="speed-btn kid-btn bg-kid-pink text-white px-3.5 py-2 rounded-full font-extrabold text-xs flex items-center gap-1.5 border border-white">
+                <span>🚶</span> NORMAL
+            </button>
+            <button onclick="setSpeed('fast')" id="speed-fast" class="speed-btn kid-btn bg-orange-100 text-orange-700 px-3.5 py-2 rounded-full font-extrabold text-xs flex items-center gap-1.5 border border-orange-300">
+                <span>🏃</span> LARI LAJU
+            </button>
+        </div>
+
+        <div class="h-8 w-1 bg-pink-100 rounded-full"></div>
+
+        <!-- Manual Breath Action -->
+        <button onclick="triggerManualBreath()" class="kid-btn bg-kid-purple text-white px-4 py-2 rounded-full font-extrabold text-xs flex items-center gap-2 border-2 border-white">
+            <span>💨</span> TARIK/HEMBUS
+        </button>
+    </div>
+
+    <!-- MODAL 1: MISI LALUAN UDARA (PUZZLE TASKA) -->
+    <div id="modal-mission" class="fixed inset-0 z-30 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="kid-card p-6 max-w-md w-full text-center space-y-4 animate-float border-4 border-kid-yellow">
+            <div class="flex justify-between items-center">
+                <h3 class="text-xl font-extrabold text-amber-600 flex items-center gap-2">
+                    <span>🧩</span> MISI LALUAN UDARA
+                </h3>
+                <button onclick="closeMissionModal()" class="w-8 h-8 rounded-full bg-slate-100 font-bold text-slate-500 hover:bg-rose-100 hover:text-rose-600">✕</button>
+            </div>
+            
+            <p class="text-xs sm:text-sm font-bold text-slate-600">
+                Susun laluan udara dari luar hingga masuk ke dalam badan kita! Klik nombor mengikut urutan yang betul:
+            </p>
+
+            <!-- Steps Grid -->
+            <div id="mission-steps-container" class="space-y-2">
+                <!-- Javascript populated -->
+            </div>
+
+            <!-- Result Feedback -->
+            <div id="mission-feedback" class="text-xs font-extrabold p-3 rounded-2xl hidden"></div>
+
+            <button onclick="checkMissionOrder()" id="btn-check-mission" class="kid-btn bg-kid-green text-white w-full py-3 rounded-2xl font-extrabold text-sm border-2 border-white">
+                SEMAK JAWAPAN 🌟
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL 2: KUIZ COMEL BERGAMBAR -->
+    <div id="modal-quiz" class="fixed inset-0 z-30 bg-slate-900/60 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="kid-card p-6 max-w-md w-full text-center space-y-4 border-4 border-kid-green">
+            <div class="flex justify-between items-center border-b-2 border-slate-100 pb-2">
+                <h3 class="text-xl font-extrabold text-emerald-600 flex items-center gap-2">
+                    <span>🌟</span> KUIZ PERNAFASAN COMEL
+                </h3>
+                <button onclick="closeQuizModal()" class="w-8 h-8 rounded-full bg-slate-100 font-bold text-slate-500 hover:bg-rose-100 hover:text-rose-600">✕</button>
+            </div>
+
+            <div id="quiz-body">
+                <div class="flex justify-between text-xs font-bold text-slate-400 mb-2">
+                    <span>SOALAN <span id="quiz-num">1</span> / 3</span>
+                    <span>BINTANG: <span id="quiz-stars">⭐⭐⭐</span></span>
+                </div>
+
+                <h4 id="quiz-question" class="text-base font-extrabold text-slate-800 mb-4">
+                    Apakah organ yang kita gunakan untuk bernafas?
+                </h4>
+
+                <div id="quiz-options" class="grid grid-cols-1 gap-2.5 text-xs font-bold">
+                    <!-- Javascript populated -->
+                </div>
+
+                <div id="quiz-msg" class="text-xs font-extrabold p-2.5 rounded-xl hidden mt-3"></div>
+            </div>
+
+            <!-- Quiz Victory Screen -->
+            <div id="quiz-victory" class="hidden space-y-3 py-4">
+                <span class="text-6xl animate-bounce inline-block">🎉</span>
+                <h4 class="text-2xl font-extrabold text-amber-500">SYABAS! BIJAKNYA!</h4>
+                <p class="text-xs font-bold text-slate-600">Anda mendapat 3 Bintang Cemerlang 🌟🌟🌟</p>
+                <button onclick="resetQuiz()" class="kid-btn bg-kid-pink text-white px-6 py-2.5 rounded-full font-extrabold text-xs">
+                    MAIN LAGI 🔄
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN THREE.JS 3D ENGINE & LOGIC -->
+    <script>
+        /* ====================================================================
+           1. DATA STRUCTURES & ORGAN PROFILES
+           ==================================================================== */
+        const ORGAN_DATA = {
+            human: {
+                title: "Paru-paru Manusia",
+                subtitle: "Menyedut Oksigen Segar!",
+                emoji: "👧",
+                desc: "Paru-paru berfungsi seperti belon comel! Apabila kita tarik nafas, paru-paru mengembang dan diafragma bergerak ke bawah.",
+                fact1: "🔵 Zarah Biru = Oksigen ($O_2$) Masuk",
+                fact2: "🔴 Zarah Merah = Karbon Dioksida ($CO_2$) Keluar"
+            },
+            fish: {
+                title: "Insang Ikan Comel",
+                subtitle: "Bernafas Dalam Air!",
+                emoji: "🐠",
+                desc: "Ikan tidak ada paru-paru! Ikan bernafas menggunakan Insang merah di tepi badannya untuk menyerap oksigen daripada air.",
+                fact1: "💧 Air mengalir melalui mulut ke insang",
+                fact2: "🔵 Insang menyerap Oksigen terlarut"
+            },
+            grasshopper: {
+                title: "Spirakel Belalang",
+                subtitle: "Liang Halus Pada Badan!",
+                emoji: "🦗",
+                desc: "Belalang bernafas menggunakan liang-liang kecil yang dipanggil Spirakel di sekeliling bahagian badannya.",
+                fact1: "🔍 Liang Spirakel terbuka & tertutup",
+                fact2: "💨 Udara terus menyerap ke tiub trakea"
+            },
+            worm: {
+                title: "Kulit Lembap Cacing",
+                subtitle: "Bernafas Terus Dari Kulit!",
+                emoji: "🪱",
+                desc: "Cacing tanah bernafas melalui kulitnya yang sentiasa lembap dan licin! Udara meresap terus masuk ke dalam kapilari darah.",
+                fact1: "🌧️ Kulit MESTI sentiasa lembap",
+                fact2: "🔴 Zarah gas bertukar di permukaan kulit"
+            }
+        };
+
+        /* ====================================================================
+           2. THREE.JS SCENE, LIGHTS & CAMERA SETUP
+           ==================================================================== */
+        let scene, camera, renderer, controls;
+        let activeOrganGroup = null;
+        let currentOrgan = 'human';
+        let isBreathing = true;
+        let breathCycle = 0; // 0 to Math.PI * 2
+        let breathSpeed = 0.03; // Normal speed
+        let isMicroMode = false;
+        let isSmokyAir = false;
+
+        // Meshes references
+        let leftLung, rightLung, diaphragm, trachea;
+        let fishMesh, gillsMesh;
+        let grasshopperMesh, spiraclesArray = [];
+        let wormMesh;
+        let particlesGroup;
+        let faceEyes = [];
+
+        function init3D() {
+            const container = document.getElementById('canvas-container');
+
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f9ff); // Soft pastel sky blue
+
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 2, 28);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.maxDistance = 60;
+            controls.minDistance = 8;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+            scene.add(ambientLight);
+
+            const dirLight = new THREE.DirectionalLight(0xffffff, 0.6);
+            dirLight.position.set(10, 20, 15);
+            dirLight.castShadow = true;
+            scene.add(dirLight);
+
+            const pointLight = new THREE.PointLight(0xf87171, 0.5, 50);
+            pointLight.position.set(0, 0, 10);
+            scene.add(pointLight);
+
+            // Particles Container
+            particlesGroup = new THREE.Group();
+            scene.add(particlesGroup);
+
+            // Build Models
+            buildHumanLungsModel();
+
+            // Window Resize
+            window.addEventListener('resize', onWindowResize);
+
+            // Animation Loop
+            animate();
+        }
+
+        /* ====================================================================
+           3. PROCEDURAL CARTOON 3D MODELS (CHILD FRIENDLY)
+           ==================================================================== */
+        
+        // --- 3D HUMAN LUNGS MODEL (CARTOON PINK & CUTE FACE) ---
+        function buildHumanLungsModel() {
+            if (activeOrganGroup) scene.remove(activeOrganGroup);
+
+            activeOrganGroup = new THREE.Group();
+
+            // Cartoon Trachea (Windpipe)
+            const tracheaGeo = new THREE.CylinderGeometry(0.8, 0.8, 7, 32);
+            const tracheaMat = new THREE.MeshStandardMaterial({ color: 0x38bdf8, roughness: 0.3 });
+            trachea = new THREE.Mesh(tracheaGeo, tracheaMat);
+            trachea.position.y = 4.5;
+            activeOrganGroup.add(trachea);
+
+            // Cute Trachea Rings
+            for(let i = -2; i <= 2; i++) {
+                const ringGeo = new THREE.TorusGeometry(0.85, 0.12, 16, 32);
+                const ringMat = new THREE.MeshStandardMaterial({ color: 0xbae6fd });
+                const ring = new THREE.Mesh(ringGeo, ringMat);
+                ring.rotation.x = Math.PI / 2;
+                ring.position.y = i * 1.0;
+                trachea.add(ring);
+            }
+
+            // Lungs Material (Pink or Dusty Grey)
+            const lungColor = isSmokyAir ? 0x64748b : 0xff85a2;
+            const lungMat = new THREE.MeshStandardMaterial({
+                color: lungColor,
+                roughness: 0.4,
+                metalness: 0.1
+            });
+
+            // Left Lung
+            const lungGeo = new THREE.SphereGeometry(3.2, 32, 32);
+            lungGeo.scale(1, 1.4, 0.8);
+            
+            leftLung = new THREE.Mesh(lungGeo, lungMat);
+            leftLung.position.set(-2.8, 1, 0);
+            activeOrganGroup.add(leftLung);
+
+            // Right Lung
+            rightLung = new THREE.Mesh(lungGeo, lungMat);
+            rightLung.position.set(2.8, 1, 0);
+            activeOrganGroup.add(rightLung);
+
+            // Add Smiling Eyes & Mouth to Lungs
+            addCuteFace(leftLung, -0.5);
+            addCuteFace(rightLung, 0.5);
+
+            // Diaphragm (Dome Base)
+            const diaGeo = new THREE.CylinderGeometry(6.5, 7, 1.2, 32);
+            const diaMat = new THREE.MeshStandardMaterial({ color: 0xc084fc, roughness: 0.5 });
+            diaphragm = new THREE.Mesh(diaGeo, diaMat);
+            diaphragm.position.y = -4;
+            activeOrganGroup.add(diaphragm);
+
+            scene.add(activeOrganGroup);
+            createAirParticles('human');
+        }
+
+        // --- CUTE FACE ATTACHMENT ---
+        function addCuteFace(parentMesh, xOffset) {
+            const eyeGeo = new THREE.SphereGeometry(0.3, 16, 16);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+
+            const eye1 = new THREE.Mesh(eyeGeo, eyeMat);
+            eye1.position.set(-0.6, 0.5, 2.8);
+            parentMesh.add(eye1);
+
+            const eye2 = new THREE.Mesh(eyeGeo, eyeMat);
+            eye2.position.set(0.6, 0.5, 2.8);
+            parentMesh.add(eye2);
+
+            // Smile Mouth
+            const mouthGeo = new THREE.TorusGeometry(0.5, 0.1, 12, 24, Math.PI);
+            const mouthMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
+            const mouth = new THREE.Mesh(mouthGeo, mouthMat);
+            mouth.rotation.x = Math.PI;
+            mouth.position.set(0, -0.2, 2.8);
+            parentMesh.add(mouth);
+        }
+
+        // --- 3D FISH MODEL ---
+        function buildFishModel() {
+            if (activeOrganGroup) scene.remove(activeOrganGroup);
+
+            activeOrganGroup = new THREE.Group();
+
+            // Fish Body
+            const bodyGeo = new THREE.SphereGeometry(5, 32, 32);
+            bodyGeo.scale(1.6, 1, 0.6);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0xfb923c, roughness: 0.3 });
+            fishMesh = new THREE.Mesh(bodyGeo, bodyMat);
+            activeOrganGroup.add(fishMesh);
+
+            // Tail Fin
+            const tailGeo = new THREE.ConeGeometry(3, 4, 3);
+            const tailMat = new THREE.MeshStandardMaterial({ color: 0xf43f5e });
+            const tail = new THREE.Mesh(tailGeo, tailMat);
+            tail.rotation.z = -Math.PI / 2;
+            tail.position.set(-8, 0, 0);
+            fishMesh.add(tail);
+
+            // Gills (Red Glowing Flaps)
+            const gillGeo = new THREE.TorusGeometry(2, 0.4, 16, 32, Math.PI * 0.8);
+            const gillMat = new THREE.MeshStandardMaterial({ color: 0xef4444, roughness: 0.2 });
+            gillsMesh = new THREE.Mesh(gillGeo, gillMat);
+            gillsMesh.position.set(2, 0, 1.8);
+            gillsMesh.rotation.y = Math.PI / 4;
+            fishMesh.add(gillsMesh);
+
+            // Fish Eye
+            const eyeGeo = new THREE.SphereGeometry(0.8, 16, 16);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+            const eye = new THREE.Mesh(eyeGeo, eyeMat);
+            eye.position.set(5, 1, 1.8);
+            fishMesh.add(eye);
+
+            const pupilGeo = new THREE.SphereGeometry(0.4, 16, 16);
+            const pupilMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const pupil = new THREE.Mesh(pupilGeo, pupilMat);
+            pupil.position.set(5.3, 1, 2.3);
+            fishMesh.add(pupil);
+
+            scene.add(activeOrganGroup);
+            createAirParticles('fish');
+        }
+
+        // --- 3D GRASSHOPPER MODEL ---
+        function buildGrasshopperModel() {
+            if (activeOrganGroup) scene.remove(activeOrganGroup);
+
+            activeOrganGroup = new THREE.Group();
+
+            // Abdomen
+            const bodyGeo = new THREE.CylinderGeometry(2, 1.5, 12, 32);
+            const bodyMat = new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.4 });
+            grasshopperMesh = new THREE.Mesh(bodyGeo, bodyMat);
+            grasshopperMesh.rotation.z = Math.PI / 2;
+            activeOrganGroup.add(grasshopperMesh);
+
+            // Spiracles (Glowing holes along body)
+            spiraclesArray = [];
+            for (let i = -4; i <= 4; i += 2) {
+                const holeGeo = new THREE.SphereGeometry(0.4, 16, 16);
+                const holeMat = new THREE.MeshStandardMaterial({ color: 0x0284c7, emissive: 0x0369a1 });
+                const hole = new THREE.Mesh(holeGeo, holeMat);
+                hole.position.set(i, 0, 2);
+                grasshopperMesh.add(hole);
+                spiraclesArray.push(hole);
+            }
+
+            scene.add(activeOrganGroup);
+            createAirParticles('grasshopper');
+        }
+
+        // --- 3D WORM MODEL ---
+        function buildWormModel() {
+            if (activeOrganGroup) scene.remove(activeOrganGroup);
+
+            activeOrganGroup = new THREE.Group();
+
+            const wormGeo = new THREE.TorusGeometry(6, 1.5, 16, 64, Math.PI);
+            const wormMat = new THREE.MeshStandardMaterial({
+                color: 0xf472b6,
+                roughness: 0.1, // Shiny moist skin
+                metalness: 0.1
+            });
+            wormMesh = new THREE.Mesh(wormGeo, wormMat);
+            wormMesh.rotation.x = Math.PI / 2;
+            activeOrganGroup.add(wormMesh);
+
+            // Cute Eyes on Worm Head
+            const eyeGeo = new THREE.SphereGeometry(0.4, 16, 16);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const eye1 = new THREE.Mesh(eyeGeo, eyeMat);
+            eye1.position.set(6, 0.8, 0.5);
+            wormMesh.add(eye1);
+
+            scene.add(activeOrganGroup);
+            createAirParticles('worm');
+        }
+
+        // --- 3D ALVEOLUS MICROSCOPIC VIEW ---
+        function buildAlveolusModel() {
+            if (activeOrganGroup) scene.remove(activeOrganGroup);
+
+            activeOrganGroup = new THREE.Group();
+
+            // Alveolus Cluster (Sacks of grapes)
+            for(let i=0; i<7; i++) {
+                const sphereGeo = new THREE.SphereGeometry(2.5, 32, 32);
+                const sphereMat = new THREE.MeshStandardMaterial({
+                    color: 0xf43f5e,
+                    roughness: 0.3,
+                    transparent: true,
+                    opacity: 0.85
+                });
+                const sack = new THREE.Mesh(sphereGeo, sphereMat);
+                sack.position.set(
+                    (Math.random()-0.5)*4,
+                    (Math.random()-0.5)*4,
+                    (Math.random()-0.5)*4
+                );
+                activeOrganGroup.add(sack);
+            }
+
+            // Blood Vessel Tube
+            const tubeGeo = new THREE.CylinderGeometry(4, 4, 14, 32);
+            const tubeMat = new THREE.MeshStandardMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.4 });
+            const tube = new THREE.Mesh(tubeGeo, tubeMat);
+            tube.position.x = -6;
+            activeOrganGroup.add(tube);
+
+            scene.add(activeOrganGroup);
+            createAirParticles('micro');
+        }
+
+        /* ====================================================================
+           4. AIR PARTICLES ($O_2$ BLUE & $CO_2$ RED)
+           ==================================================================== */
+        function createAirParticles(type) {
+            // Clear existing particles
+            while(particlesGroup.children.length > 0){ 
+                particlesGroup.remove(particlesGroup.children[0]); 
+            }
+
+            const pCount = 40;
+            for(let i = 0; i < pCount; i++) {
+                const isOxygen = i % 2 === 0;
+                const pGeo = new THREE.SphereGeometry(0.35, 16, 16);
+                
+                // Color: Blue for O2, Red/Orange for CO2, Dark Grey for Smoke
+                let pColor = isOxygen ? 0x38bdf8 : 0xf87171;
+                if (isSmokyAir) pColor = 0x475569;
+
+                const pMat = new THREE.MeshBasicMaterial({ color: pColor });
+                const particle = new THREE.Mesh(pGeo, pMat);
+
+                // Initial positions
+                particle.position.set(
+                    (Math.random() - 0.5) * 12,
+                    (Math.random() - 0.5) * 10,
+                    (Math.random() - 0.5) * 6
+                );
+
+                particle.userData = {
+                    isOxygen: isOxygen,
+                    speed: 0.05 + Math.random() * 0.05,
+                    offset: Math.random() * Math.PI * 2
+                };
+
+                particlesGroup.add(particle);
+            }
+        }
+
+        /* ====================================================================
+           5. ANIMATION LOOP & BREATHING MECHANICS
+           ==================================================================== */
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isBreathing) {
+                breathCycle += breathSpeed;
+                const scaleVal = 1 + Math.sin(breathCycle) * 0.18; // Smooth expansion/contraction
+                const statusEl = document.getElementById('breath-status-text');
+
+                // Update Lungs & Diaphragm
+                if (currentOrgan === 'human' && leftLung && rightLung && diaphragm) {
+                    leftLung.scale.set(scaleVal, scaleVal * 1.1, scaleVal);
+                    rightLung.scale.set(scaleVal, scaleVal * 1.1, scaleVal);
+
+                    // Diaphragm moves down on inhale, up on exhale
+                    diaphragm.position.y = -4 - Math.sin(breathCycle) * 1.2;
+
+                    // Update Status Text
+                    if (Math.sin(breathCycle) > 0) {
+                        statusEl.innerText = "💨 TARIK NAFAS... (PARU-PARU KEMBANG)";
+                        statusEl.className = "text-base font-extrabold text-sky-500 animate-breath-text";
+                    } else {
+                        statusEl.innerText = "😮‍💨 HEMBUS NAFAS... (PARU-PARU KECIL)";
+                        statusEl.className = "text-base font-extrabold text-pink-500 animate-breath-text";
+                    }
+                }
+
+                // Update Fish Gills
+                if (currentOrgan === 'fish' && gillsMesh) {
+                    gillsMesh.rotation.y = (Math.PI / 4) + Math.sin(breathCycle) * 0.25;
+                }
+
+                // Update Grasshopper Spiracles Glow
+                if (currentOrgan === 'grasshopper' && spiraclesArray.length > 0) {
+                    spiraclesArray.forEach(s => {
+                        s.scale.setScalar(1 + Math.sin(breathCycle) * 0.3);
+                    });
+                }
+
+                // Update Worm Skin Pulsation
+                if (currentOrgan === 'worm' && wormMesh) {
+                    wormMesh.scale.setScalar(1 + Math.sin(breathCycle) * 0.08);
+                }
+
+                // Particles Flow
+                particlesGroup.children.forEach(p => {
+                    if (p.userData.isOxygen) {
+                        // O2 flows inwards
+                        p.position.y -= p.userData.speed;
+                        if (p.position.y < -6) p.position.y = 8;
+                    } else {
+                        // CO2 flows outwards
+                        p.position.y += p.userData.speed;
+                        if (p.position.y > 8) p.position.y = -6;
+                    }
+                });
+            }
+
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        /* ====================================================================
+           6. INTERACTIVE CONTROLS & ORGAN SWITCHER
+           ==================================================================== */
+        function switchOrgan(type) {
+            currentOrgan = type;
+            isMicroMode = false;
+            
+            // Highlight Button
+            document.querySelectorAll('.organ-btn').forEach(b => {
+                b.className = "organ-btn kid-btn bg-slate-100 text-slate-700 hover:bg-pink-100 p-2.5 sm:px-3 sm:py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-3 w-full border-2 border-white";
+            });
+            document.getElementById(`btn-organ-${type}`).className = "organ-btn kid-btn bg-kid-pink text-white p-2.5 sm:px-3 sm:py-2.5 rounded-2xl font-bold text-xs sm:text-sm flex items-center gap-3 w-full border-2 border-white";
+
+            // Update Info Card
+            const data = ORGAN_DATA[type];
+            document.getElementById('card-emoji').innerText = data.emoji;
+            document.getElementById('card-title').innerText = data.title;
+            document.getElementById('card-subtitle').innerText = data.subtitle;
+            document.getElementById('card-desc').innerText = data.desc;
+            document.getElementById('fact-1').innerText = data.fact1;
+            document.getElementById('fact-2').innerText = data.fact2;
+
+            // Build 3D Model
+            if (type === 'human') buildHumanLungsModel();
+            else if (type === 'fish') buildFishModel();
+            else if (type === 'grasshopper') buildGrasshopperModel();
+            else if (type === 'worm') buildWormModel();
+
+            playPopSfx();
+        }
+
+        function toggleBreathing() {
+            isBreathing = !isBreathing;
+            const icon = document.getElementById('icon-playpause');
+            icon.className = isBreathing ? "fa-solid fa-pause" : "fa-solid fa-play";
+            playPopSfx();
+        }
+
+        function setSpeed(mode) {
+            document.querySelectorAll('.speed-btn').forEach(b => {
+                b.className = "speed-btn kid-btn bg-slate-100 text-slate-600 px-3.5 py-2 rounded-full font-extrabold text-xs flex items-center gap-1.5 border border-slate-200";
+            });
+
+            if (mode === 'slow') {
+                breathSpeed = 0.015;
+                document.getElementById('speed-slow').className = "speed-btn kid-btn bg-sky-400 text-white px-3.5 py-2 rounded-full font-extrabold text-xs flex items-center gap-1.5 border border-white";
+            } else if (mode === 'normal') {
+                breathSpeed = 0.035;
+                document.getElementById('speed-normal').className = "speed-btn kid-btn bg-kid-pink text-white px-3.5 py-2 rounded-full font-extrabold text-xs flex items-center gap-1.5 border border-white";
+            } else if (mode === 'fast') {
+                breathSpeed = 0.08;
+                document.getElementById('speed-fast').className = "speed-btn kid-btn bg-orange-500 text-white px-3.5 py-2 rounded-full font-extrabold text-xs flex items-center gap-1.5 border border-white";
+            }
+            playPopSfx();
+        }
+
+        function triggerManualBreath() {
+            breathCycle += Math.PI / 2;
+            playPopSfx();
+        }
+
+        function toggleMicroMode() {
+            isMicroMode = !isMicroMode;
+            if (isMicroMode) {
+                buildAlveolusModel();
+                document.getElementById('card-title').innerText = "Alveolus Mikroskopik";
+                document.getElementById('card-subtitle').innerText = "Pertukaran Gas $O_2$ & $CO_2$!";
+                document.getElementById('card-desc').innerText = "Di sinilah oksigen segar masuk ke dalam darah dan karbon dioksida dibuang!";
+            } else {
+                switchOrgan(currentOrgan);
+            }
+            playPopSfx();
+        }
+
+        function toggleAirQuality() {
+            isSmokyAir = !isSmokyAir;
+            const btn = document.getElementById('btn-air-quality');
+            const label = document.getElementById('air-label');
+            const icon = document.getElementById('air-icon');
+
+            if (isSmokyAir) {
+                btn.className = "kid-btn bg-slate-700 text-amber-300 font-bold px-4 py-2.5 rounded-full flex items-center gap-2 border-2 border-white text-xs sm:text-sm";
+                label.innerText = "ASAP KOTOR! 🚭";
+                icon.className = "fa-solid fa-[#ffffff] fa-smoke text-lg";
+            } else {
+                btn.className = "kid-btn bg-emerald-400 text-white font-bold px-4 py-2.5 rounded-full flex items-center gap-2 border-2 border-white text-xs sm:text-sm";
+                label.innerText = "UDARA BERSIH ✨";
+                icon.className = "fa-solid fa-wind text-lg";
+            }
+
+            switchOrgan(currentOrgan);
+            playPopSfx();
+        }
+
+        /* ====================================================================
+           7. MISSION MODAL (LALUAN UDARA PUZZLE FOR TASKA)
+           ==================================================================== */
+        const MISSION_STEPS = [
+            { id: 1, text: "1. Hidung (Menyedut Udara)", icon: "👃" },
+            { id: 2, text: "2. Trakea / Salur Udara", icon: "🫁" },
+            { id: 3, text: "3. Paru-paru (Kembang Belon)", icon: "🎈" }
+        ];
+
+        let userStepOrder = [];
+
+        function openMissionModal() {
+            document.getElementById('modal-mission').classList.remove('hidden');
+            userStepOrder = [];
+            renderMissionSteps();
+            playPopSfx();
+        }
+
+        function closeMissionModal() {
+            document.getElementById('modal-mission').classList.add('hidden');
+        }
+
+        function renderMissionSteps() {
+            const container = document.getElementById('mission-steps-container');
+            container.innerHTML = '';
+
+            MISSION_STEPS.forEach(step => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-3 rounded-2xl bg-sky-50 border-2 border-sky-200 hover:bg-sky-100 font-extrabold text-xs text-sky-800 flex items-center justify-between transition";
+                btn.innerHTML = `<span>${step.icon} ${step.text}</span> <span class="text-xs bg-white px-2 py-1 rounded-full border">PILIH</span>`;
+                btn.onclick = () => selectMissionStep(step.id, btn);
+                container.appendChild(btn);
+            });
+
+            document.getElementById('mission-feedback').className = "text-xs font-extrabold p-3 rounded-2xl hidden";
+        }
+
+        function selectMissionStep(id, btnEl) {
+            if (userStepOrder.includes(id)) return;
+            userStepOrder.push(id);
+            btnEl.className = "w-full p-3 rounded-2xl bg-kid-pink text-white font-extrabold text-xs flex items-center justify-between border-2 border-white shadow-md";
+            btnEl.querySelector('span:last-child').innerText = `Langkah ${userStepOrder.length}`;
+            playPopSfx();
+        }
+
+        function checkMissionOrder() {
+            const feedback = document.getElementById('mission-feedback');
+            feedback.classList.remove('hidden');
+
+            if (userStepOrder.length === 3 && userStepOrder[0] === 1 && userStepOrder[1] === 2 && userStepOrder[2] === 3) {
+                feedback.className = "text-xs font-extrabold p-3 rounded-2xl bg-emerald-100 text-emerald-700 border-2 border-emerald-300 block";
+                feedback.innerText = "🎉 TEPAT SEKALI! Udara masuk melalui Hidung ➔ Trakea ➔ Paru-paru!";
+                playWinSfx();
+            } else {
+                feedback.className = "text-xs font-extrabold p-3 rounded-2xl bg-rose-100 text-rose-700 border-2 border-rose-300 block";
+                feedback.innerText = "😅 Alamak, cuba lagi ya! Pilih Hidung dahulu, kemudian Trakea, lalu Paru-paru.";
+                userStepOrder = [];
+                setTimeout(renderMissionSteps, 2000);
+            }
+        }
+
+        /* ====================================================================
+           8. QUIZ MODAL (TASKA PICTURE QUIZ)
+           ==================================================================== */
+        const QUIZ_DATA = [
+            {
+                q: "Organ apakah yang mengembang seperti belon bila kita tarik nafas?",
+                options: ["🫁 Paru-paru", "🦴 Tulang", "🦷 Gigi"],
+                ans: 0
+            },
+            {
+                q: "Ikan comel bernafas dalam air menggunakan...",
+                options: ["🫁 Paru-paru", "🐠 Insang", "🦵 Kaki"],
+                ans: 1
+            },
+            {
+                q: "Udara bersih bernilai tinggi mengandungi gas...",
+                options: ["🔵 Oksigen Segar", "💨 Asap Hitam", "🔥 Api"],
+                ans: 0
+            }
+        ];
+
+        let quizIndex = 0;
+
+        function openQuizModal() {
+            document.getElementById('modal-quiz').classList.remove('hidden');
+            quizIndex = 0;
+            renderQuizQuestion();
+            playPopSfx();
+        }
+
+        function closeQuizModal() {
+            document.getElementById('modal-quiz').classList.add('hidden');
+        }
+
+        function renderQuizQuestion() {
+            document.getElementById('quiz-body').classList.remove('hidden');
+            document.getElementById('quiz-victory').classList.add('hidden');
+
+            const q = QUIZ_DATA[quizIndex];
+            document.getElementById('quiz-num').innerText = quizIndex + 1;
+            document.getElementById('quiz-question').innerText = q.q;
+
+            const optsContainer = document.getElementById('quiz-options');
+            optsContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const btn = document.createElement('button');
+                btn.className = "w-full p-3 rounded-2xl bg-slate-50 border-2 border-slate-200 hover:bg-emerald-50 hover:border-emerald-300 text-slate-700 font-extrabold text-xs text-left transition";
+                btn.innerText = opt;
+                btn.onclick = () => answerQuiz(idx);
+                optsContainer.appendChild(btn);
+            });
+
+            document.getElementById('quiz-msg').className = "text-xs font-extrabold p-2.5 rounded-xl hidden mt-3";
+        }
+
+        function answerQuiz(selectedIdx) {
+            const q = QUIZ_DATA[quizIndex];
+            const msg = document.getElementById('quiz-msg');
+            msg.classList.remove('hidden');
+
+            if (selectedIdx === q.ans) {
+                msg.className = "text-xs font-extrabold p-2.5 rounded-xl bg-emerald-100 text-emerald-700 border border-emerald-300 block mt-3";
+                msg.innerText = "🌟 BETUL! Pandainya anak comel!";
+                playWinSfx();
+
+                setTimeout(() => {
+                    quizIndex++;
+                    if (quizIndex < QUIZ_DATA.length) {
+                        renderQuizQuestion();
+                    } else {
+                        document.getElementById('quiz-body').classList.add('hidden');
+                        document.getElementById('quiz-victory').classList.remove('hidden');
+                    }
+                }, 1200);
+            } else {
+                msg.className = "text-xs font-extrabold p-2.5 rounded-xl bg-rose-100 text-rose-700 border border-rose-300 block mt-3";
+                msg.innerText = "❌ Cuba lagi kawan!";
+            }
+        }
+
+        function resetQuiz() {
+            quizIndex = 0;
+            renderQuizQuestion();
+        }
+
+        /* ====================================================================
+           9. NATIVE WEB AUDIO SFX (HAPPY POP & WIN SOUNDS)
+           ==================================================================== */
+        let audioCtx = null;
+        let isMuted = false;
+
+        function initAudioCtx() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function toggleAudio() {
+            initAudioCtx();
+            isMuted = !isMuted;
+            const icon = document.getElementById('audio-icon');
+            icon.className = isMuted ? "fa-solid fa-volume-xmark text-lg" : "fa-solid fa-volume-high text-lg";
+        }
+
+        function playPopSfx() {
+            if (isMuted) return;
+            initAudioCtx();
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(400, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(800, audioCtx.currentTime + 0.08);
+
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + 0.08);
+        }
+
+        function playWinSfx() {
+            if (isMuted) return;
+            initAudioCtx();
+
+            const now = audioCtx.currentTime;
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, now); // C5
+            osc.frequency.setValueAtTime(659.25, now + 0.1); // E5
+            osc.frequency.setValueAtTime(783.99, now + 0.2); // G5
+
+            gain.gain.setValueAtTime(0.25, now);
+            gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+
+            osc.start(now);
+            osc.stop(now + 0.4);
+        }
+
+        // Initialize 3D Engine on load
+        window.onload = () => {
+            init3D();
+        };
+    </script>
+</body>
+</html>
